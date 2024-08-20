@@ -7,13 +7,13 @@ $template = <<<EOD
 voice.handfree.tone_vol = 9
 voice.ring_vol = 7
 ### Time Settings
+local_time.dhcp_time = 1
 local_time.time_zone = +5
 local_time.time_zone_name = Russia(Chelyabinsk)
 local_time.summer_time = 0
 local_time.ntp_server1 = ${sip_serv}
 local_time.ntp_server2 = ${ntp_serv}
 local_time.date_format = 6
-local_time.manual_ntp_srv_prior = 1
 ### Config Account 1
 account.1.enable = 1
 account.1.codec.pcmu.priority = 1
@@ -27,14 +27,23 @@ account.1.password = ${ext_secret}
 account.1.sip_server.1.address = ${sip_serv}
 account.1.unregister_on_reboot = 1
 ###  Static Configuration  ###
-static.auto_provision.dhcp_option.enable = 0
-static.auto_provision.pnp_enable = 0
-static.auto_provision.power_on = 0
+auto_provision.dhcp_option.enable = 1
+#auto_provision.pnp_enable = 1
+auto_provision.power_on = 1
+auto_provision.repeat.enable = 1
+auto_provision.repeat.minutes = 720
+auto_provision.server.url = tftp://192.168.15.250
+#programablekey.3.line = 0
+#programablekey.3.type = 33
+zero_touch.enable = 1
+zero_touch.wait_time = 5
+network.dhcp_host_name = tlf_${exten}
 ### Network
-static.network.dhcp_host_name = tlf_${exten}
+network.span_to_pc_port = 1
+wui.https_enable = 0
 voice_mail.number.1 = *97
-features.relog_offtime = 15
 sip.listen_port = 9950
+features.relog_offtime = 15
 lang.gui = Russian
 lang.wui = Russian
 #### по умолчанию rtp-порты 11780-12780

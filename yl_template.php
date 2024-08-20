@@ -16,8 +16,8 @@ local_time.date_format = 6
 local_time.manual_ntp_srv_prior = 1
 ### Config Account 1
 account.1.enable = 1
-account.1.codec.pcmu.priority = 1
-account.1.codec.pcma.priority = 2
+account.1.codec.pcma.priority = 1
+account.1.codec.pcmu.priority = 2
 account.1.codec.g722.priority = 3
 account.1.label = ${exten}
 account.1.display_name = ${exten}

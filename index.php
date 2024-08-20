@@ -50,9 +50,51 @@
     </head>
 
     <body height="100%" bgcolor="CCCCCC">
+    <?php
+        $elem = '00156566173c.cfg';
+    	function ident_vendor($mac){
+	    global $filepost;
+	    global $fileprefix;
+	    global $regstring;
+	    global $parse_ext;
+	    global $elem;
+//	    $elem = '00156566173c.cfg';
+	    $get_vendor = substr($mac, 0, 6);
+	    if ($get_vendor === '4c3b74') {
+		$filepost = '';
+		$fileprefix = '';
+		$regstring = 'SIP1 Register User';
+		$parse_ext = "grep $regstring $elem | cut -d ':' -f2";
+		return 'snr';
+	    } elseif ($get_vendor === '0001a8') {
+		return 'welltech';
+	    } elseif ($get_vendor === '00268b') {
+		$filepost = '.xml';
+		$fileprefix = '';
+		$parse_ext = "grep -Eo 'UserName=\"[[:digit:]]{3,4}\"' $elem | cut -d '=' -f2";
+		return 'escene';
+	    } elseif (in_array($get_vendor, ['805ec0', '001565'])) {
+		$filepost = '.cfg';
+		$fileprefix = '';
+		$regstring = 'account.1.user_name';
+		$parse_ext = "grep $regstring ${elem} | cut -d '=' -f 2";
+		return 'yealink';
+	    } elseif ($get_vendor === 'f4b549') {
+		return 'yeastar';
+	    } elseif (in_array($get_vendor, ['001ee5', '20aa4b', 'bc671c'])) {
+		return 'linksys';
+	    } elseif (in_arrey($get_vendor, ['c074ad', 'ec74d7', '000b82'])) {
+		$filepost = '.xml';
+		$fileprefix = 'cfg';
+		return 'grandstream';
+	    } else {
+		return 'FK';
+	    }
+	}
+    ?>
         <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" bordercolor="#FFFFFF" class="main_border">
             <tr>
-                <td colspan="3" bgcolor="02754C"><img src="blocks/head011.png" width="500" height="97"></td>
+                <td colspan="3" bgcolor="#0066ff"><img src="blocks/head011.png" width="500" height="97"></td>
             </tr>
         </table>
 
@@ -60,6 +102,8 @@
             <thead>
                 <h1>Создание конфига:</h1>
             </thead>
+	    <a href="arptable.php">ARP-table</a><br>
+	    <a href="registrar.php">Registration and Useragent</a>
             <tr>
                 <td>
                     <form action="" method="get" name="gs_provisioning">
@@ -68,15 +112,16 @@
                         <br>
 			
 			<?php
-                        include ("blocks/values.php");
+ini_set('display_errors',1);
+error_reporting(E_ALL);
+                        include("blocks/values.php");
                         if ($ip_mode == "mixed") {
                             echo "<p><label for='ip_mode'>Выберите тип адреса для текущего телефона:</label><br>
                     	          <input name='ip_mode' type='radio' value='static'>Статический<br>
                      		  <input name='ip_mode' type='radio' value='dhcp' checked>Автоматический<br>";
                     	}
                     	
-			$ip_mode = $_GET['ip_mode'];
-
+			//$ip_mode = $_GET['ip_mode'];
                         if ($ip_mode != "dhcp") {
                             echo "<label for='ip_addr'><b>Введите требуемый IP-адрес телефона:</b>
                             <input name='ip_addr' type='text' maxlength='15' placeholder='172.16.0.255'>
@@ -92,67 +137,75 @@
                         <input name="exten" type="text" maxlength="4" placeholder="123">
                         </label>
                         <br>
-                        <label for="vendor"><b>Выберите производителя телефона:</b><br>
+<!--                        <label for="vendor"><b>Выберите производителя телефона:</b><br>
                     	    <input type="radio" name="vendor" value="gs">Grandstream<br>
                             <input type="radio" name="vendor" value="yl" checked>Yealink<br>
                         </label>
                         <br>
-                        <input type="submit" name="submit" value="Запросить" method="post">
+-->                        <input type="submit" name="submit" value="Запросить" method="post">
                     </form>
 
         <?php
         //Переменные
-        $ip_addr = $_GET['ip_addr'];
         $exten = $_GET['exten'];
-        $vendor = $_GET['vendor'];
+//        $vendor = $_GET['vendor'];
         $current_ip = $_GET['current_ip'];
 
 	//Подключение к БД
         include ("blocks/bd.php");
 
-	if ($ip_mode == 'dhcp'){
-	    $ip_addr = $current_ip;
-	    }
-
-	//Расширение файлов
-	if ($vendor == 'gs'){
-	    $filepost = ".xml";
-	    $fileprefix = "cfg";
-	    }
-	else if ($vendor == 'yl'){
-	    $filepost = ".cfg";
-	    $fileprefix = "";
-	}
-
-	//Имена файлов с путями и расширениями
-	$filename = $exten . $filepost;
-	$filename_mac = $fileprefix . $mac2 . $filepost;
-	$fullname = $filepath . $filename;
+//	if ($ip_mode == 'dhcp'){
+//	    $ip_addr = $current_ip;
+//	    }
 
 	//Имя файла для конфига
-//	var_dump($ip_addr);
-	$mac = shell_exec("/sbin/arp | /bin/grep $ip_addr | /bin/awk '{print $3}'");
+//	$mac = shell_exec("/usr/sbin/arp | /bin/grep '$ip_addr' | /usr/bin/awk '{print $3}'");
+	$mac = shell_exec("/usr/sbin/arp | /bin/grep '$current_ip' | /usr/bin/awk '{print $3}'");
 
 	//Проверка на пустой мак-адрес	
 	if (empty($mac)){
 	    $fullname_mac = $fullname;
 	}
-	else {
+
+	//else {
 	$mac2 = str_replace(":", "", $mac);
 	$mac3 = substr($mac2, 0, -1);
-	$filename_mac = $fileprefix . $mac3 . $filepost;
-	$fullname_mac = $filepath . $filename_mac;
-	}
-	
 //	var_dump($mac3);
-//	var_dump($filename);
+	$get_vendor = ident_vendor($mac3);
+	echo "<br>";
+//	var_dump($get_vendor);
+	echo "Vendor IP-hone is <b>${get_vendor}</b><br>";
+
+	//Расширение файлов
+/*	if ($get_vendor == 'grandstream'){
+	    $filepost = ".xml";
+	    $fileprefix = "cfg";
+	} else if ($get_vendor == 'yealink'){
+	    $filepost = ".cfg";
+	    $fileprefix = "";
+	}
+*/
+//	var_dump($fileprefix); echo "<br>";
+//	var_dump($mac3); echo "<br>";
+//	var_dump($filepost); echo "<br>";
+	$filename_mac = $fileprefix . $mac3 . $filepost;
+//	var_dump($filename_mac); echo "<br>";
+	$fullname_mac = $filepath . $filename_mac;
+//	var_dump($fullname_mac);
+//	}
+	
+	//Имена файлов с путями и расширениями
+	$filename = $exten . $filepost;
+	$filename_mac = $fileprefix . $mac3 . $filepost;
+	$filename_mac = $tftppath . $filename_mac;
+	$fullname = $filepath . $filename;
 //	var_dump($filename_mac);
 	
 	//Проверка на пустое поле производитель
-	if (empty($vendor)){
-	    $vendor = 'yl';
+//	if (empty($vendor)){
+//	    $vendor = 'yealink';
 //          exit ("Необходимо выбрать производителя телефона");
-        }
+//        }
 
 	//Проверка на пустой экстен
 	if (empty($exten)){
@@ -162,39 +215,36 @@
 	else if (file_exists($filename) or file_exists($filename_mac)){
 		echo "Файлы ${filename} или ${filename_mac} уже существуют и будут перезаписаны<br>";
 	}
-
 	$fconf = fopen($filename, 'w') or die("не удалось открыть файл");
 	$fconf_mac = fopen($filename_mac, 'w') or die("не удалось открыть файл");
 
 	$query = "SELECT data FROM sip WHERE id = '${exten}' and keyword = 'secret';";
-	$result = mysql_query($query, $db) or die("Query failed");
-//	var_dump($query);
-//	var_dump($result);
-	$ext_secret = mysql_fetch_array($result)[0];
-//	var_dump($ext_secret);
+	$result = mysqli_query($db, $query) or die("Query failed");
+	$ext_secret = mysqli_fetch_array($result)[0];
 //	echo $exten . ':' . $ext_secret;
-	mysql_free_result($result);
-	mysql_close($db);
+	mysqli_free_result($result);
+	mysqli_close($db);
 
-	if ($vendor == 'gs'){
-        include ("blocks/gs_template.php");
-	    }
-	else if ($vendor == 'yl'){
-        include ("blocks/yl_template.php");
+	if ($get_vendor == 'grandstreams'){
+    	    include ("blocks/gs_template.php");
+	} else if ($get_vendor == 'yealink'){
+    	    include ("blocks/yl_template.php");
+	} else if ($get_vendor == 'snr'){
+	    include ("blocks/snr_template.php");
+	} else if ($get_vendor == 'escene'){
+	    include ("blocks/es_template.php");
 	}
-
-//	var_dump($template);
-//	echo $template;
+	shell_exec("sudo /bin/chown nobody:nogroup $filename_mac");
 	fwrite($fconf, $template);
 	fclose($fconf);
 
 	fwrite($fconf_mac, $template);
 	fclose($fconf_mac);
-	var_dump($fullname_mac);
-//	var_dump($tftppath);
+//	echo "fullname: "; var_dump($fullname_mac); echo "<br>";
+//	echo "tftppath: "; var_dump($tftppath); echo "<br>";
 	$tftpname = $tftppath . $filename_mac;
-	var_dump($tftpname);
-	shell_exec("/bin/mv $fullname_mac $tftppath");
+//	echo "tftpname: "; var_dump($tftpname);
+	shell_exec("sudo /bin/cp $fullname_mac $tftpname");
 	shell_exec("sudo /bin/chown nobody.nogroup $tftpname");
 	shell_exec("sudo /bin/chmod 777 $tftpname");
 
@@ -203,34 +253,38 @@
         }
 	else {
 	    if (file_exists($filename)){
-		echo "Файлы ${filename} и ${filename_mac} сохранены";
+		echo "Files ${filename} and $filename_mac сохранены";
 	    }
 	}
 
 	echo '<br>  <hr align="left" width="100%" size="2" color="#ff0000" />';
-/*
-	$dir = '/var/www/localhost/htdocs/pbx/genconf';
-	$files1 = array_slice(scandir($dir), 3);
-	$expansions = ["cnf", "xml"];
-//	var_dump($files1);
-	$files2 = preg_grep("/xml cnf/", $files1);
-//	var_dump($files2);
 
-	echo "<table border='1'>";
+	// Print list of configuration files 
+//	$dir = '/var/www/localhost/htdocs/pbx/genconf';
+	$dir = $tftppath;
+//	$fileslist = shell_exec("ls $dir | grep 'xml\|cnf\|cfg'");
+	$fileslist = shell_exec("ls $dir");
+	$listfiles = explode("\n", $fileslist);
 
-	foreach($files1 as $elem){
-	var_dump($elem);
-	echo "<br>";
-//	var_dump($expansions);
-
-	    if(preg_grep("/xml conf/", $elem)){
-		var_dump($elem);
-		echo "<tr> $expansions </tr><br>";
-	    }
+	echo "<h2>Files in tftp dir</h2>";
+	echo "<table border='1'><tr><th>Config file</th><th>Exten</th></tr>";
+	foreach($listfiles as $elem) {
+	echo "<tr>";
+//	echo $elem;
+//    	echo "<br>";
+//	ident_vendor($mac3);
+//	$ext_of_file = shell_exec("grep $regstring $tftppath . $elem | cut -d '=' -f 2");
+//	var_dump($parse_ext); echo "<br>";
+//	var_dump(shell_exec($parse_ext));
+	echo "<td>" . $elem . "</td>";
+	$elem = $tftppath . $elem;
+//	var_dump($elem);
+	ident_vendor($mac3);
+        echo "<td>" . shell_exec($parse_ext) . "</td>";
+        echo "</tr>";
 	}
-
 	echo "</table>";
-*/
+
 	?>
 		</td>
 	    </tr>
