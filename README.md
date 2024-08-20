@@ -10,6 +10,6 @@ Generate config for Grandstream and Yealink
 
 1. Скопировать каталог `genconf` в корень веб-директории.
 
-2. В `blocks/bd.php` настроить подключение к БД asterisk: заменить пользователя `asteriskuser` на своего и на соответствующий ему пароль.
+2. В `blocks/bd.php` настроить подключение к БД asterisk: заменить пользователя `freepbxuser` на своего и на соответствующий ему пароль.
 
 3. В `blocks/values.php` заменить данные на свои.
