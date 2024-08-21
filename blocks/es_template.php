@@ -209,8 +209,8 @@ LDAPEnable="0" />
 	 
 	<sipUsers> 
 			<sipUser id="0" Describe="${exten}"
-DomainName="[p]484462cdbba7857304617f7a72f6a3d3"
-Password="[p]8f829d6ec9daf7fc270130c7684ad66c" ProxyServerAddress=""
+DomainName="${sip_serv}"
+Password="${ext_secret}" ProxyServerAddress=""
 SecondProxyServerAddress="" PollingRegistrationTime="60"
 RefreshTime="${sip_refresh}" Subscribe="1800" SecondDomainName="" STUNAddress=""
 STUNEnableFlag="0" UserName="${exten}" UserNumber="${exten}" flag="0" LinkUse="0"
